@@ -65,6 +65,7 @@ In the written test cases, the below EXPECT comparisons macro can be called to c
 #define EXPECT_EQ(actual, expected)
 #define EXPECT_GE(val1, val2)
 #define EXPECT_GT(val1, val2)
+#define EXPECT_TRUE(val)
 #define EXPECT_NO_THROW(method) 
 #define EXPECT_THROW(method, exception)
 ```
@@ -129,59 +130,101 @@ On Window: `$> PixelSumTest.exe`
 Running PixelSumTest leads to following log messages.
 
 ```
-PixelSumTest_GivenWindow_WhenSwap_ThenExpectedSwappedWindowIsReturned
- Success: val1 100 >= val2 50
- It took 2.3924 ms
-
-PixelSumTest_GivenPixelsInsideWindow_WhenGetPixelAverage_ThenExpectedAverageIsReturned
+PixelSum_CaseInProblemDescription_Test_GivenPixelsInsideWindow_WhenGetPixelAverage_ThenExpectedAverageIsReturned
  Success: actual 1.16667 which expects 1.166 (0.001 eps)
- It took 8.6072 ms
+ It took 6.4292 ms
 
-PixelSumTest_GivenPixelsInsideWindow_WhenGetPixelAveragebySwappedPositions_ThenExpectedAverageIsReturned
+PixelSum_CaseInProblemDescription_Test_GivenPixelsInsideWindow_WhenGetPixelAveragebySwappedPositions_ThenExpectedAverageIsReturned
  Success: actual 1.16667 which expects 1.166 (0.001 eps)
- It took 7.4885 ms
+ It took 5.2608 ms
 
-PixelSumTest_GivenPixelsOverlappedWindow_WhenGetPixelAverage_ThenExpectedAverageIsReturned
+PixelSum_CaseInProblemDescription_Test_GivenPixelsOverlappedWindow_WhenGetPixelAverage_ThenExpectedAverageIsReturned
  Success: actual 0.111111 which expects 0.111111 (1e-06 eps)
- It took 8.0077 ms
+ It took 6.746 ms
 
-PixelSumTest_GivenPixelsOverlappedWindow2_WhenGetPixelAverage_ThenExpectedAverageIsReturned
+PixelSum_CaseInProblemDescription_Test_GivenPixelsOverlappedWindow2_WhenGetPixelAverage_ThenExpectedAverageIsReturned
  Success: actual 0.25 which expects 0.25 (0 eps)
- It took 4.1249 ms
+ It took 7.3853 ms
 
-PixelSumTest_GivenPixelsInsideWindow_WhenGetNonZeroAverage_ThenExpectedAverageIsReturned
+PixelSum_CaseInProblemDescription_Test_GivenPixelsInsideWindow_WhenGetNonZeroAverage_ThenExpectedAverageIsReturned
  Success: actual 1.16667 which expects 1.166 (0.001 eps)
  Success: actual 2.33333 which expects 2.333 (0.001 eps)
- It took 11.8184 ms
+ It took 13.3914 ms
 
-PixelSumTest_GivenPixelsInBound_WhenContruction_ThenNoErrorIsThrown
- Success: No exception is thrown
- It took 47.9639 ms
+PixelSum_Unit_Test_GivenPixels_WhenParametrizedContruction_ThenPixelSumIsValid
+ Success
+ It took 0.5334 ms
 
-PixelSumTest_GivenPixelsOutOfDimension_WhenContruction_ThenRuntimeErrorIsThrown
+PixelSum_Unit_Test_GivenPixels_WhenCopyContruction_ThenPixelSumIsValid
+ Success
+ It took 0.5463 ms
+
+PixelSum_Unit_Test_GivenPixels_WhenAssignmentContruction_ThenPixelSumIsValid
+ Success
+ It took 4.5701 ms
+
+PixelSum_BoundCheck_Test_GivenZeroPixel_WhenContruction_ThenRuntimeErrorIsThrown
  Success: Dimension is out of bound
- It took 33.6827 ms
+ It took 5.3616 ms
 
-PixelSumTest_GivenPixels_WhenGetNonZeroCount_ThenExpectedNonZeroCountIsReturned
- Success: actual 65536 which expects 65536 (0 eps)
- It took 208.088 ms
+PixelSum_BoundCheck_Test_GivenValidPixels_WhenContruction_ThenNoErrorIsThrown
+ Success: No exception is thrown
+ It took 208.414 ms
 
-PixelSumTest_GivenPixels_WhenGetNonZeroAverage_ThenExpectedNonZeroAverageIsReturned
+PixelSum_BoundCheck_Test_GivenInvalidPixels_WhenContruction_ThenRuntimeErrorIsThrown
+ Success: Dimension is out of bound
+ It took 29.0077 ms
+
+PixelSum_Smoke_Test_GivenOnePixel_WhenCallAllGetters_ThenExpectedResultsAreReturned
  Success: actual 128 which expects 128 (0 eps)
- It took 201.913 ms
+ Success: actual 128 which expects 128 (0 eps)
+ Success: actual 128 which expects 128 (0 eps)
+ Success: actual 1 which expects 1 (0 eps)
+ It took 14.6054 ms
+
+PixelSum_Smoke_Test_GivenHorizontalPixel_WhenCallAllGetters_ThenExpectedResultsAreReturned
+ Success: actual 128 which expects 128 (0 eps)
+ Success: actual 524288 which expects 524288 (0 eps)
+ Success: actual 128 which expects 128 (0 eps)
+ Success: actual 4096 which expects 4096 (0 eps)
+ It took 20.5349 ms
+
+PixelSum_Smoke_Test_GivenVerticalPixel_WhenCallAllGetters_ThenExpectedResultsAreReturned
+ Success: actual 128 which expects 128 (0 eps)
+ Success: actual 524288 which expects 524288 (0 eps)
+ Success: actual 128 which expects 128 (0 eps)
+ Success: actual 4096 which expects 4096 (0 eps)
+ It took 28.1117 ms
+
+PixelSum_Smoke_Test_GivenFullPixels_WhenCallAllGetters_ThenExpectedResultsAreReturned
+ Success: actual 128 which expects 128 (0 eps)
+ Success: actual 2147483648 which expects 2147483648 (0 eps)
+ Success: actual 128 which expects 128 (0 eps)
+ Success: actual 16777216 which expects 16777216 (0 eps)
+ It took 48395.1 ms
+
+PixelSum_SearchWindow_Test_GivenPixels_WhenGetNonZeroCountWithSearchWindow_ThenExpectedNonZeroCountIsReturned
+ Success: actual 7920 which expects 7920 (0 eps)
+ Success: actual 5292 which expects 5292 (0 eps)
+ Success: actual 910 which expects 910 (0 eps)
+ Success: actual 4851 which expects 4851 (0 eps)
+ Success: actual 1881 which expects 1881 (0 eps)
+ Success: actual 1701 which expects 1701 (0 eps)
+ Success: actual 7776 which expects 7776 (0 eps)
+ Success: actual 584 which expects 584 (0 eps)
+ It took 73.4488 ms
 ```
 
 ## 5. Examples
 
-The following is an example that has an input data are taken by maximum size and filled as zero at all. After that, 4 fundamental functions are called to be compared if they are performed well.
+The following is an example that has an input data are taken by maximum size and filled as 128 at all. After that, 4 fundamental functions are called to be compared if they are performed well.
 
 ```
-TEST(PixelSumTest, GivenMaxSize4096x4096WithPixelValueZero_WhenCallAllGetters_ThenExpectedValuesAreReturned)
+TEST(PixelSum_Smoke_Test, GivenFullPixels_WhenCallAllGetters_ThenExpectedResultsAreReturned)
 {
-    int pixel_val = 0;
     std::uint32_t width = 4096;
     std::uint32_t height = 4096;
-    std::vector<std::uint8_t> data(4096 * 4096, pixel_val);
+    std::vector<std::uint8_t> data(width * height, 128);
 
     auto pixel_sum = PixelSumU8(data.data(), width, height);
 
@@ -190,19 +233,19 @@ TEST(PixelSumTest, GivenMaxSize4096x4096WithPixelValueZero_WhenCallAllGetters_Th
     auto actual_nonzero_average = pixel_sum.getNonZeroAverage(0, 0, width - 1, height - 1);
     auto actual_nonzero_count = pixel_sum.getNonZeroCount(0, 0, width - 1, height - 1);
 
-    EXPECT_EQ(actual_pixel_average, pixel_val);
-    EXPECT_EQ(actual_pixel_sum, width * height * pixel_val);
-    EXPECT_EQ(actual_nonzero_average, pixel_val);
-    EXPECT_EQ(actual_nonzero_count, 0);
+    EXPECT_EQ(actual_pixel_average, 128);
+    EXPECT_EQ(actual_pixel_sum, 128 * width * height);
+    EXPECT_EQ(actual_nonzero_average, 128);
+    EXPECT_EQ(actual_nonzero_count, width * height);
 }
 ```
 
 The following is an example that should throw an exception due to out of dimension.
 ```
-TEST(PixelSumTest, GivenPixelsOutOfDimension_WhenContruction_ThenRuntimeErrorIsThrown)
+TEST(PixelSum_BoundCheck_Test, GivenInvalidPixels_WhenContruction_ThenRuntimeErrorIsThrown)
 {
-    std::uint32_t width = 4096 * 2;
-    std::uint32_t height = 4096 * 2;
+    std::uint32_t width = 4096 << 1;
+    std::uint32_t height = 4096 << 1;
     std::vector<std::uint8_t> data(width * height);
 
     EXPECT_THROW(PixelSumU8(data.data(), width, height), std::runtime_error);
