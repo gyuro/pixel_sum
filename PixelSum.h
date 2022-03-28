@@ -46,8 +46,8 @@ template <typename T>
 inline void swap_if_a_greater_than_b(T& a, T& b)
 {
     if (a > b) {
-        T tmp = a;
-        a = b;
-        b = tmp;
+        a ^= b;
+        b ^= a;
+        a ^= b;
     }
 }
