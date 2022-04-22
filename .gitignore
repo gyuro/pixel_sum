@@ -438,6 +438,7 @@ FodyWeavers.xsd
 *.sln.iml
 
 ### VisualStudio Patch ###
+.vscode
 # Additional files built by Visual Studio
 
 # End of https://www.toptal.com/developers/gitignore/api/visualstudio,c++,stdlib
