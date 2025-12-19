@@ -1,22 +1,18 @@
 #include "PixelSum.h"
 
 #include <algorithm>
-#include <exception>
-#include <functional>
-#include <iostream>
+#include <stdexcept>
+#include <utility>
 
 // In case of huge data is given, then it should take a fairly long time.
-template <typename T, typename S>
-void IntegralImage(
-    const std::vector<T>& source,
+template <typename T, typename S, typename Transformer>
+void IntegralImage(const std::vector<T>& source,
     int width,
     int height,
     std::vector<S>& target,
-    std::function<S(const T& val)> transformer = [](const T& val) -> T {
-        return val;
-    })
+    Transformer transformer)
 {
-    auto source_iter = source.begin();
+    auto source_iter = source.cbegin();
     auto target_iter = target.begin();
 
     // The summed matrix is calculated from top left corner
@@ -38,14 +34,25 @@ void IntegralImage(
 }
 
 template <typename T, typename S>
+void IntegralImage(const std::vector<T>& source, int width, int height, std::vector<S>& target)
+{
+    IntegralImage(source,
+        width,
+        height,
+        target,
+        [](const T& val) -> S { return static_cast<S>(val); });
+}
+
+template <typename T, typename S>
 PixelSum<T, S>::PixelSum(const T* buffer, int width, int height)
     : width_(width)
     , height_(height)
 {
-    uint32_t dimension = width_ * height_;
-    if (width_ <= 0 || width_ > MAX_WIDTH || height_ <= 0 || height_ > MAX_HEIGHT || dimension > (MAX_WIDTH * MAX_HEIGHT)) {
+    if (width_ <= 0 || width_ > MAX_WIDTH || height_ <= 0 || height_ > MAX_HEIGHT) {
         throw std::runtime_error("Dimension is out of bound");
     }
+
+    const auto dimension = static_cast<std::size_t>(width_) * static_cast<std::size_t>(height_);
 
     // copy buffer to pixel data
     pixel_data_ = std::vector<T>(buffer, buffer + dimension);
@@ -60,27 +67,6 @@ PixelSum<T, S>::PixelSum(const T* buffer, int width, int height)
     // cumulative matrix
     summed_data_ = std::vector<S>(dimension);
     IntegralImage(pixel_data_, width_, height_, summed_data_);
-}
-
-template <typename T, typename S>
-PixelSum<T, S>::~PixelSum(void) = default;
-
-template <typename T, typename S>
-PixelSum<T, S>::PixelSum(const PixelSum<T, S>& pixel_sum)
-{
-    *this = pixel_sum;
-}
-
-template <typename T, typename S>
-PixelSum<T, S>& PixelSum<T, S>::operator=(const PixelSum<T, S>& pixel_sum)
-{
-    width_ = pixel_sum.width_;
-    height_ = pixel_sum.height_;
-    pixel_data_ = pixel_sum.pixel_data_;
-    nonzero_data_ = pixel_sum.nonzero_data_;
-    summed_data_ = pixel_sum.summed_data_;
-
-    return *this;
 }
 
 template <typename T, typename S>
@@ -130,7 +116,7 @@ double PixelSum<T, S>::getNonZeroAverage(int x0, int y0, int x1, int y1) const
 }
 
 template <typename T, typename S>
-PixelSum<T, S>::operator bool() const
+PixelSum<T, S>::operator bool() const noexcept
 {
     return !pixel_data_.empty() && !nonzero_data_.empty() && !summed_data_.empty();
 }
