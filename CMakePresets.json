@@ -9,7 +9,7 @@
     {
       "name": "default",
       "displayName": "Default (RelWithDebInfo)",
-      "generator": "Ninja",
+      "generator": "Unix Makefiles",
       "binaryDir": "${sourceDir}/build",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
@@ -19,7 +19,7 @@
     {
       "name": "coverage",
       "displayName": "Coverage",
-      "generator": "Ninja",
+      "generator": "Unix Makefiles",
       "binaryDir": "${sourceDir}/build-coverage",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
