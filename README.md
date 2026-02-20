@@ -25,6 +25,8 @@ cmake --build build --parallel
 
 ## Usage
 ```cpp
+#include <pixel_sum/PixelSum.h>
+
 std::vector<std::uint8_t> pixels(width * height, 128);
 PixelSumU8 ps(pixels.data(), width, height);
 
@@ -33,6 +35,12 @@ auto avg = ps.getPixelAverage(10, 10, 20, 20);
 auto nzCount = ps.getNonZeroCount(0, 0, width - 1, height - 1);
 auto nzAvg = ps.getNonZeroAverage(5, 5, 15, 15);
 ```
+
+## Project layout
+- `include/pixel_sum/` — public library headers
+- `src/` — implementation
+- `tests/` — test entrypoint and support headers
+- `.github/workflows/` — CI/quality automation
 
 ## How it works
 Construction computes two integral images (sum and non-zero mask). Each query reads four corners and combines them (`D - B - C + A`), so query time stays constant while memory overhead is linear in the number of pixels.
@@ -57,4 +65,4 @@ GitHub Actions (`.github/workflows/ci.yml`) runs:
 
 ## Notes
 - Dimensions are limited to 4096 x 4096 to keep intermediate sums within `uint32_t` for 8-bit pixels; switch to `PixelSumU16` for larger ranges or higher bit depth.
-- The minimal test harness in `PixelSumTest.cpp` exercises edge cases and can be extended with additional `TEST` blocks.
+- The minimal test harness in `tests/PixelSumTest.cpp` exercises edge cases and can be extended with additional `TEST` blocks.

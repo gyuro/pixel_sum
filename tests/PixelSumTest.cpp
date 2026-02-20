@@ -1,6 +1,6 @@
-#include "PixelSum.h"
-#include "TestUtility.h"
-#include "TimeUtility.h"
+#include "pixel_sum/PixelSum.h"
+#include "support/TestUtility.h"
+#include "support/TimeUtility.h"
 
 TEST(PixelSum_CaseInProblemDescription_Test, GivenPixelsInsideWindow_WhenGetPixelAverage_ThenExpectedAverageIsReturned)
 {

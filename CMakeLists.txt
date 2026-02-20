@@ -19,15 +19,33 @@ if(PIXEL_SUM_ENABLE_SANITIZERS AND CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_link_options(-fsanitize=address,undefined)
 endif()
 
-add_library(PixelSumLib PixelSum.cpp PixelSum.h TestUtility.h TimeUtility.h Common.h)
-target_include_directories(PixelSumLib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+set(PIXEL_SUM_PUBLIC_HEADERS
+    ${CMAKE_SOURCE_DIR}/include/pixel_sum/PixelSum.h)
+
+set(PIXEL_SUM_TEST_SUPPORT_HEADERS
+    ${CMAKE_SOURCE_DIR}/tests/support/Common.h
+    ${CMAKE_SOURCE_DIR}/tests/support/TestUtility.h
+    ${CMAKE_SOURCE_DIR}/tests/support/TimeUtility.h)
+
+add_library(PixelSumLib
+    src/PixelSum.cpp
+    ${PIXEL_SUM_PUBLIC_HEADERS})
+
+target_include_directories(PixelSumLib
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     target_compile_options(PixelSumLib PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
-add_executable(PixelSumTest PixelSumTest.cpp)
+add_executable(PixelSumTest
+    tests/PixelSumTest.cpp
+    ${PIXEL_SUM_TEST_SUPPORT_HEADERS})
+
 target_link_libraries(PixelSumTest PRIVATE PixelSumLib)
+target_include_directories(PixelSumTest PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 
 if(BUILD_TESTING)
     add_test(NAME PixelSumTest COMMAND PixelSumTest)
@@ -39,12 +57,10 @@ find_program(CLANG_TIDY clang-tidy)
 find_program(CPPCHECK cppcheck)
 
 set(PIXEL_SUM_ALL_CPP
-    ${CMAKE_SOURCE_DIR}/PixelSum.cpp
-    ${CMAKE_SOURCE_DIR}/PixelSum.h
-    ${CMAKE_SOURCE_DIR}/PixelSumTest.cpp
-    ${CMAKE_SOURCE_DIR}/TestUtility.h
-    ${CMAKE_SOURCE_DIR}/TimeUtility.h
-    ${CMAKE_SOURCE_DIR}/Common.h)
+    ${PIXEL_SUM_PUBLIC_HEADERS}
+    ${CMAKE_SOURCE_DIR}/src/PixelSum.cpp
+    ${CMAKE_SOURCE_DIR}/tests/PixelSumTest.cpp
+    ${PIXEL_SUM_TEST_SUPPORT_HEADERS})
 
 if(CLANG_FORMAT)
     add_custom_target(format
@@ -62,7 +78,7 @@ endif()
 
 if(CLANG_TIDY)
     add_custom_target(tidy
-        COMMAND ${CLANG_TIDY} -p ${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR}/PixelSum.cpp ${CMAKE_SOURCE_DIR}/PixelSumTest.cpp
+        COMMAND ${CLANG_TIDY} -p ${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR}/src/PixelSum.cpp ${CMAKE_SOURCE_DIR}/tests/PixelSumTest.cpp
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         COMMENT "Running clang-tidy"
         VERBATIM)
@@ -80,19 +96,23 @@ if(CPPCHECK)
     endif()
 
     add_custom_target(cppcheck
-        COMMAND ${CPPCHECK} ${PIXEL_SUM_CPPCHECK_ARGS} ${CMAKE_SOURCE_DIR}/PixelSum.cpp ${CMAKE_SOURCE_DIR}/PixelSumTest.cpp
+        COMMAND ${CPPCHECK} ${PIXEL_SUM_CPPCHECK_ARGS}
+            -I ${CMAKE_SOURCE_DIR}/include
+            -I ${CMAKE_SOURCE_DIR}/tests
+            ${CMAKE_SOURCE_DIR}/src
+            ${CMAKE_SOURCE_DIR}/tests
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         COMMENT "Running cppcheck"
         VERBATIM)
 endif()
 
-install(TARGETS PixelSumLib PixelSumTest
+install(TARGETS PixelSumLib
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
-install(FILES PixelSum.h Common.h TestUtility.h TimeUtility.h
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/PixelSum)
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 install(FILES README.md DESTINATION ${CMAKE_INSTALL_DATADIR}/PixelSum)
 

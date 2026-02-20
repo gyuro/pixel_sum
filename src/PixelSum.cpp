@@ -1,4 +1,4 @@
-#include "PixelSum.h"
+#include "pixel_sum/PixelSum.h"
 
 #include <algorithm>
 #include <stdexcept>

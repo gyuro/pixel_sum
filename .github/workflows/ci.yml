@@ -97,7 +97,7 @@ jobs:
           if ! gcovr \
             --root . \
             --exclude 'build-coverage/.*' \
-            --exclude 'PixelSumTest.cpp' \
+            --exclude 'tests/.*' \
             --print-summary > coverage.txt; then
             echo "gcovr report generation failed; preserving pipeline with advisory report." > coverage.txt
           fi
@@ -105,7 +105,7 @@ jobs:
           if ! gcovr \
             --root . \
             --exclude 'build-coverage/.*' \
-            --exclude 'PixelSumTest.cpp' \
+            --exclude 'tests/.*' \
             --xml-pretty coverage.xml; then
             printf '<coverage />\n' > coverage.xml
           fi
