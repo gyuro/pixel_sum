@@ -10,8 +10,16 @@ A tiny C++17 library that builds summed-area tables (integral images) so rectang
 
 ## Build and run
 ```bash
-cmake -S . -B build
-cmake --build build
+cmake --preset default
+cmake --build --preset default
+ctest --preset default
+```
+
+Manual fallback:
+
+```bash
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo
+cmake --build build --parallel
 ./build/PixelSumTest
 ```
 
@@ -28,6 +36,24 @@ auto nzAvg = ps.getNonZeroAverage(5, 5, 15, 15);
 
 ## How it works
 Construction computes two integral images (sum and non-zero mask). Each query reads four corners and combines them (`D - B - C + A`), so query time stays constant while memory overhead is linear in the number of pixels.
+
+## Code quality
+
+```bash
+cmake --build --preset default --target format
+cmake --build --preset default --target format-check
+cmake --build --preset default --target tidy
+cmake --build --preset default --target cppcheck
+```
+
+## CI pipeline
+
+GitHub Actions (`.github/workflows/ci.yml`) runs:
+
+1. `lint` — clang-format check, cppcheck, clang-tidy (advisory)
+2. `build_test` — build + ctest
+3. `coverage` — gcovr report artifacts
+4. `packaging` — CPack `.tar.gz` package artifact
 
 ## Notes
 - Dimensions are limited to 4096 x 4096 to keep intermediate sums within `uint32_t` for 8-bit pixels; switch to `PixelSumU16` for larger ranges or higher bit depth.

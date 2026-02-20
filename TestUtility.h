@@ -37,7 +37,7 @@
     do {                                                                    \
         auto val1_ = val1;                                                  \
         auto val2_ = val2;                                                  \
-        if (val1_ >= val2_) {                                               \
+        if (val1_ > val2_) {                                                \
             std::cout << GREEN " Success:" RESET;                           \
         } else {                                                            \
             std::cerr << RED " Failure:" RESET;                             \

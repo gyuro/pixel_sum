@@ -1,0 +1,156 @@
+name: CI
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pixel-sum-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint (format + cppcheck + tidy)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build g++ clang-format clang-tidy cppcheck
+
+      - name: Configure
+        run: cmake --preset default -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+
+      - name: Format check
+        run: cmake --build --preset default --target format-check
+
+      - name: Cppcheck
+        run: cmake --build --preset default --target cppcheck
+
+      - name: Clang-tidy (advisory)
+        run: |
+          if ! cmake --build --preset default --target tidy; then
+            echo "clang-tidy reported issues (advisory in CI baseline)."
+          fi
+
+  build_test:
+    name: Build + test
+    runs-on: ubuntu-latest
+    needs: lint
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build g++
+
+      - name: Configure
+        run: cmake --preset default
+
+      - name: Build
+        run: cmake --build --preset default --parallel
+
+      - name: Run CTest
+        run: ctest --preset default
+
+  coverage:
+    name: Coverage
+    runs-on: ubuntu-latest
+    needs: build_test
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install coverage dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build g++ gcovr
+
+      - name: Configure coverage build
+        run: cmake --preset coverage
+
+      - name: Build coverage targets
+        run: cmake --build --preset coverage --parallel
+
+      - name: Run tests for coverage
+        run: ctest --test-dir build-coverage --output-on-failure
+
+      - name: Generate coverage reports
+        run: |
+          if ! gcovr \
+            --root . \
+            --exclude 'build-coverage/.*' \
+            --exclude 'PixelSumTest.cpp' \
+            --print-summary > coverage.txt; then
+            echo "gcovr report generation failed; preserving pipeline with advisory report." > coverage.txt
+          fi
+
+          if ! gcovr \
+            --root . \
+            --exclude 'build-coverage/.*' \
+            --exclude 'PixelSumTest.cpp' \
+            --xml-pretty coverage.xml; then
+            printf '<coverage />\n' > coverage.xml
+          fi
+
+          {
+            echo "### Coverage report"
+            echo ""
+            echo '```text'
+            cat coverage.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload coverage artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: pixel-sum-coverage
+          path: |
+            coverage.txt
+            coverage.xml
+
+  packaging:
+    name: Packaging
+    runs-on: ubuntu-latest
+    needs: [lint, build_test, coverage]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install packaging dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build g++
+
+      - name: Configure
+        run: cmake --preset default
+
+      - name: Build
+        run: cmake --build --preset default --parallel
+
+      - name: Smoke run binary
+        run: ./build/PixelSumTest
+
+      - name: Package (CPack)
+        run: cpack --config build/CPackConfig.cmake -G TGZ
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pixel-sum-package
+          path: build/*.tar.gz
