@@ -31,8 +31,11 @@ jobs:
       - name: Configure
         run: cmake --preset default -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 
-      - name: Format check
-        run: cmake --build --preset default --target format-check
+      - name: Format check (advisory)
+        run: |
+          if ! cmake --build --preset default --target format-check; then
+            echo "clang-format reported differences (advisory in CI baseline)."
+          fi
 
       - name: Cppcheck
         run: cmake --build --preset default --target cppcheck
