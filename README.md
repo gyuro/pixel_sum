@@ -25,7 +25,7 @@ cmake --build build --parallel
 
 ## Usage
 ```cpp
-#include <pixel_sum/PixelSum.hpp>
+#include <pixel_sum/pixel_sum.hpp>
 
 std::vector<std::uint8_t> pixels(width * height, 128);
 PixelSumU8 ps(pixels.data(), width, height);
@@ -65,4 +65,4 @@ GitHub Actions (`.github/workflows/ci.yml`) runs:
 
 ## Notes
 - Dimensions are limited to 4096 x 4096 to keep intermediate sums within `uint32_t` for 8-bit pixels; switch to `PixelSumU16` for larger ranges or higher bit depth.
-- The minimal test harness in `tests/PixelSumTest.cpp` exercises edge cases and can be extended with additional `TEST` blocks.
+- The minimal test harness in `tests/pixel_sum_test.cpp` exercises edge cases and can be extended with additional `TEST` blocks.

@@ -20,7 +20,7 @@ if(PIXEL_SUM_ENABLE_SANITIZERS AND CMAKE_BUILD_TYPE STREQUAL "Debug")
 endif()
 
 set(PIXEL_SUM_PUBLIC_HEADERS
-    ${CMAKE_SOURCE_DIR}/include/pixel_sum/PixelSum.hpp)
+    ${CMAKE_SOURCE_DIR}/include/pixel_sum/pixel_sum.hpp)
 
 set(PIXEL_SUM_TEST_SUPPORT_HEADERS
     ${CMAKE_SOURCE_DIR}/tests/support/Common.hpp
@@ -28,7 +28,7 @@ set(PIXEL_SUM_TEST_SUPPORT_HEADERS
     ${CMAKE_SOURCE_DIR}/tests/support/TimeUtility.hpp)
 
 add_library(PixelSumLib
-    src/PixelSum.cpp
+    src/pixel_sum.cpp
     ${PIXEL_SUM_PUBLIC_HEADERS})
 
 target_include_directories(PixelSumLib
@@ -41,7 +41,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 endif()
 
 add_executable(PixelSumTest
-    tests/PixelSumTest.cpp
+    tests/pixel_sum_test.cpp
     ${PIXEL_SUM_TEST_SUPPORT_HEADERS})
 
 target_link_libraries(PixelSumTest PRIVATE PixelSumLib)
@@ -58,8 +58,8 @@ find_program(CPPCHECK cppcheck)
 
 set(PIXEL_SUM_ALL_CPP
     ${PIXEL_SUM_PUBLIC_HEADERS}
-    ${CMAKE_SOURCE_DIR}/src/PixelSum.cpp
-    ${CMAKE_SOURCE_DIR}/tests/PixelSumTest.cpp
+    ${CMAKE_SOURCE_DIR}/src/pixel_sum.cpp
+    ${CMAKE_SOURCE_DIR}/tests/pixel_sum_test.cpp
     ${PIXEL_SUM_TEST_SUPPORT_HEADERS})
 
 if(CLANG_FORMAT)
@@ -78,7 +78,7 @@ endif()
 
 if(CLANG_TIDY)
     add_custom_target(tidy
-        COMMAND ${CLANG_TIDY} -p ${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR}/src/PixelSum.cpp ${CMAKE_SOURCE_DIR}/tests/PixelSumTest.cpp
+        COMMAND ${CLANG_TIDY} -p ${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR}/src/pixel_sum.cpp ${CMAKE_SOURCE_DIR}/tests/pixel_sum_test.cpp
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         COMMENT "Running clang-tidy"
         VERBATIM)
