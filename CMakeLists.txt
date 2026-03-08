@@ -23,9 +23,9 @@ set(PIXEL_SUM_PUBLIC_HEADERS
     ${CMAKE_SOURCE_DIR}/include/pixel_sum/pixel_sum.hpp)
 
 set(PIXEL_SUM_TEST_SUPPORT_HEADERS
-    ${CMAKE_SOURCE_DIR}/tests/support/Common.hpp
-    ${CMAKE_SOURCE_DIR}/tests/support/TestUtility.hpp
-    ${CMAKE_SOURCE_DIR}/tests/support/TimeUtility.hpp)
+    ${CMAKE_SOURCE_DIR}/tests/support/common.hpp
+    ${CMAKE_SOURCE_DIR}/tests/support/test_utility.hpp
+    ${CMAKE_SOURCE_DIR}/tests/support/time_utility.hpp)
 
 add_library(PixelSumLib
     src/pixel_sum.cpp
