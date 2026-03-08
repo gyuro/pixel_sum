@@ -1,118 +1,116 @@
-#include "pixel_sum/PixelSum.h"
+#include "pixel_sum/PixelSum.hpp"
 
 #include <algorithm>
 #include <stdexcept>
-#include <utility>
 
-// In case of huge data is given, then it should take a fairly long time.
+namespace {
 template <typename T, typename S, typename Transformer>
-void IntegralImage(const std::vector<T>& source,
-    int width,
-    int height,
-    std::vector<S>& target,
-    Transformer transformer)
+void buildIntegralImage(std::span<const T> source,
+                        int width,
+                        int height,
+                        std::span<S> target,
+                        Transformer transformer)
 {
-    auto source_iter = source.cbegin();
-    auto target_iter = target.begin();
+    const auto at = [width](int x, int y) -> std::size_t {
+        return static_cast<std::size_t>(y) * static_cast<std::size_t>(width) + static_cast<std::size_t>(x);
+    };
 
-    // The summed matrix is calculated from top left corner
-    // I(x, y) = i(x, y) + I(x, y - 1) + I(x - 1, y) - I(x - 1, y - 1)
+    target[at(0, 0)] = transformer(source[at(0, 0)]);
 
-    // fill first row
-    *target_iter++ = transformer(*source_iter++);
-    for (int x = 1; x < width; x++) {
-        *target_iter++ = *(target_iter - 1) + transformer(*source_iter++);
+    for (int x = 1; x < width; ++x) {
+        target[at(x, 0)] = target[at(x - 1, 0)] + transformer(source[at(x, 0)]);
     }
 
-    // fill rest of row
-    for (int y = 1; y < height; y++) {
-        *target_iter++ = transformer(*source_iter++) + *(target_iter - width);
-        for (int x = 1; x < width; x++) {
-            *target_iter++ = transformer(*source_iter++) + *(target_iter - width) + *(target_iter - 1) - *(target_iter - width - 1);
+    for (int y = 1; y < height; ++y) {
+        target[at(0, y)] = target[at(0, y - 1)] + transformer(source[at(0, y)]);
+        for (int x = 1; x < width; ++x) {
+            target[at(x, y)] = transformer(source[at(x, y)]) + target[at(x, y - 1)] + target[at(x - 1, y)] -
+                               target[at(x - 1, y - 1)];
         }
     }
 }
 
 template <typename T, typename S>
-void IntegralImage(const std::vector<T>& source, int width, int height, std::vector<S>& target)
+void buildIntegralImage(std::span<const T> source, int width, int height, std::span<S> target)
 {
-    IntegralImage(source,
-        width,
-        height,
-        target,
-        [](const T& val) -> S { return static_cast<S>(val); });
+    buildIntegralImage<T, S>(source, width, height, target, [](const T value) -> S { return static_cast<S>(value); });
 }
+} // namespace
 
 template <typename T, typename S>
 PixelSum<T, S>::PixelSum(const T* buffer, int width, int height)
+    : PixelSum(std::span<const T>(buffer, static_cast<std::size_t>(width) * static_cast<std::size_t>(height)), width, height)
+{
+}
+
+template <typename T, typename S>
+PixelSum<T, S>::PixelSum(std::span<const T> buffer, int width, int height)
     : width_(width)
     , height_(height)
 {
-    if (width_ <= 0 || width_ > MAX_WIDTH || height_ <= 0 || height_ > MAX_HEIGHT) {
+    if (width_ <= 0 || width_ > kMaxWidth || height_ <= 0 || height_ > kMaxHeight) {
         throw std::runtime_error("Dimension is out of bound");
     }
 
     const auto dimension = static_cast<std::size_t>(width_) * static_cast<std::size_t>(height_);
+    if (buffer.size() < dimension) {
+        throw std::runtime_error("Buffer size is smaller than width*height");
+    }
 
-    // copy buffer to pixel data
-    pixel_data_ = std::vector<T>(buffer, buffer + dimension);
+    pixel_data_.assign(buffer.begin(), buffer.begin() + static_cast<std::ptrdiff_t>(dimension));
 
-    // non-zero count for sparce matrix
-    nonzero_data_ = std::vector<S>(dimension);
-    IntegralImage<T, S>(
-        pixel_data_, width_, height_, nonzero_data_, [](const T& val) -> T {
-            return val > 0;
-        });
+    nonzero_data_.assign(dimension, S{});
+    buildIntegralImage<T, S>(std::span<const T>(pixel_data_),
+                             width_,
+                             height_,
+                             std::span<S>(nonzero_data_),
+                             [](const T value) -> S { return value > T{} ? S{1} : S{0}; });
 
-    // cumulative matrix
-    summed_data_ = std::vector<S>(dimension);
-    IntegralImage(pixel_data_, width_, height_, summed_data_);
+    summed_data_.assign(dimension, S{});
+    buildIntegralImage<T, S>(std::span<const T>(pixel_data_), width_, height_, std::span<S>(summed_data_));
 }
 
 template <typename T, typename S>
 S PixelSum<T, S>::getPixelSum(int x0, int y0, int x1, int y1) const
 {
-    swap(x0, y0, x1, y1);
-    if (!clampBound(x0, y0, x1, y1)) {
-        return 0;
+    normalizeBounds(x0, y0, x1, y1);
+    if (!clampBounds(x0, y0, x1, y1)) {
+        return S{};
     }
 
-    return getSummedArea(summed_data_, x0, y0, x1, y1);
+    return getSummedArea(std::span<const S>(summed_data_), x0, y0, x1, y1);
 }
 
 template <typename T, typename S>
 double PixelSum<T, S>::getPixelAverage(int x0, int y0, int x1, int y1) const
 {
-    swap(x0, y0, x1, y1);
-    int count = (x1 - x0 + 1) * (y1 - y0 + 1);
-
-    if (!clampBound(x0, y0, x1, y1)) {
+    normalizeBounds(x0, y0, x1, y1);
+    if (!clampBounds(x0, y0, x1, y1)) {
         return 0.0;
     }
 
-    double sum = static_cast<double>(getPixelSum(x0, y0, x1, y1));
-
-    return sum / count;
+    const auto count = static_cast<double>((x1 - x0 + 1) * (y1 - y0 + 1));
+    const auto sum = static_cast<double>(getSummedArea(std::span<const S>(summed_data_), x0, y0, x1, y1));
+    return count > 0.0 ? (sum / count) : 0.0;
 }
 
 template <typename T, typename S>
 S PixelSum<T, S>::getNonZeroCount(int x0, int y0, int x1, int y1) const
 {
-    swap(x0, y0, x1, y1);
-    if (!clampBound(x0, y0, x1, y1)) {
-        return 0;
+    normalizeBounds(x0, y0, x1, y1);
+    if (!clampBounds(x0, y0, x1, y1)) {
+        return S{};
     }
 
-    return getSummedArea(nonzero_data_, x0, y0, x1, y1);
+    return getSummedArea(std::span<const S>(nonzero_data_), x0, y0, x1, y1);
 }
 
 template <typename T, typename S>
 double PixelSum<T, S>::getNonZeroAverage(int x0, int y0, int x1, int y1) const
 {
-    double sum = static_cast<double>(getPixelSum(x0, y0, x1, y1));
-    auto count = getNonZeroCount(x0, y0, x1, y1);
-
-    return count > 0 ? (sum / count) : 0;
+    const auto sum = static_cast<double>(getPixelSum(x0, y0, x1, y1));
+    const auto count = getNonZeroCount(x0, y0, x1, y1);
+    return count > S{} ? (sum / static_cast<double>(count)) : 0.0;
 }
 
 template <typename T, typename S>
@@ -122,57 +120,47 @@ PixelSum<T, S>::operator bool() const noexcept
 }
 
 template <typename T, typename S>
-void PixelSum<T, S>::swap(int& x0, int& y0, int& x1, int& y1) const
+void PixelSum<T, S>::normalizeBounds(int& x0, int& y0, int& x1, int& y1)
 {
-    swap_if_a_greater_than_b(x0, x1);
-    swap_if_a_greater_than_b(y0, y1);
+    if (x0 > x1) {
+        std::swap(x0, x1);
+    }
+    if (y0 > y1) {
+        std::swap(y0, y1);
+    }
 }
 
 template <typename T, typename S>
-bool PixelSum<T, S>::clampBound(int& x0, int& y0, int& x1, int& y1) const
+bool PixelSum<T, S>::clampBounds(int& x0, int& y0, int& x1, int& y1) const
 {
     if ((x0 < 0 && x1 < 0) || (x0 >= width_ && x1 >= width_) || (y0 < 0 && y1 < 0) || (y0 >= height_ && y1 >= height_)) {
         return false;
     }
 
-    x0 = std::max(x0, 0);
-    y0 = std::max(y0, 0);
-    x1 = std::min(x1, width_ - 1);
-    y1 = std::min(y1, height_ - 1);
-
+    x0 = std::clamp(x0, 0, width_ - 1);
+    y0 = std::clamp(y0, 0, height_ - 1);
+    x1 = std::clamp(x1, 0, width_ - 1);
+    y1 = std::clamp(y1, 0, height_ - 1);
     return true;
 }
 
 template <typename T, typename S>
-S PixelSum<T, S>::getSummedArea(const std::vector<S>& data,
-    int x0,
-    int y0,
-    int x1,
-    int y1) const
+std::size_t PixelSum<T, S>::indexOf(int x, int y, int width) noexcept
 {
-    /*
-   * (x0, y0)        (x1, y0)
-   *    A---------------B
-   *    |               |
-   *    | D - B - C + A |
-   *    |               |
-   *    C---------------D
-   * (x0, y1)        (x1, y1)
-   */
+    return static_cast<std::size_t>(y) * static_cast<std::size_t>(width) + static_cast<std::size_t>(x);
+}
 
-    S A = 0, B = 0, C = 0, D = 0;
-    D = data[y1 * width_ + x1];
-    if (x0 >= 1 && y0 >= 1) {
-        A = data[(y0 - 1) * width_ + (x0 - 1)];
-        C = data[y1 * width_ + (x0 - 1)];
-        B = data[(y0 - 1) * width_ + x1];
-    } else if (x0 >= 1) {
-        C = data[y1 * width_ + (x0 - 1)];
-    } else if (y0 >= 1) {
-        B = data[(y0 - 1) * width_ + x1];
-    }
+template <typename T, typename S>
+S PixelSum<T, S>::getSummedArea(std::span<const S> data, int x0, int y0, int x1, int y1) const
+{
+    const auto idx = [this](int x, int y) -> std::size_t { return indexOf(x, y, width_); };
 
-    return D - B - C + A;
+    const S d = data[idx(x1, y1)];
+    const S b = y0 > 0 ? data[idx(x1, y0 - 1)] : S{};
+    const S c = x0 > 0 ? data[idx(x0 - 1, y1)] : S{};
+    const S a = (x0 > 0 && y0 > 0) ? data[idx(x0 - 1, y0 - 1)] : S{};
+
+    return d - b - c + a;
 }
 
 template class PixelSum<std::uint8_t, std::uint32_t>;

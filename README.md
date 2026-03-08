@@ -1,6 +1,6 @@
 # PixelSum
 
-A tiny C++17 library that builds summed-area tables (integral images) so rectangular queries over pixel buffers are O(1). It supports 8- and 16-bit pixels via a templated `PixelSum<T, S>` that stores both the raw pixels and two integral images: one for sums and one for non-zero counts.
+A tiny C++20 library that builds summed-area tables (integral images) so rectangular queries over pixel buffers are O(1). It supports 8- and 16-bit pixels via a templated `PixelSum<T, S>` that stores both the raw pixels and two integral images: one for sums and one for non-zero counts.
 
 ## Features
 - Constant-time sum, average, non-zero count, and non-zero average for any axis-aligned window
@@ -25,7 +25,7 @@ cmake --build build --parallel
 
 ## Usage
 ```cpp
-#include <pixel_sum/PixelSum.h>
+#include <pixel_sum/PixelSum.hpp>
 
 std::vector<std::uint8_t> pixels(width * height, 128);
 PixelSumU8 ps(pixels.data(), width, height);

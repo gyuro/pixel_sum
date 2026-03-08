@@ -8,7 +8,7 @@ project(
 include(GNUInstallDirs)
 include(CTest)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -20,12 +20,12 @@ if(PIXEL_SUM_ENABLE_SANITIZERS AND CMAKE_BUILD_TYPE STREQUAL "Debug")
 endif()
 
 set(PIXEL_SUM_PUBLIC_HEADERS
-    ${CMAKE_SOURCE_DIR}/include/pixel_sum/PixelSum.h)
+    ${CMAKE_SOURCE_DIR}/include/pixel_sum/PixelSum.hpp)
 
 set(PIXEL_SUM_TEST_SUPPORT_HEADERS
-    ${CMAKE_SOURCE_DIR}/tests/support/Common.h
-    ${CMAKE_SOURCE_DIR}/tests/support/TestUtility.h
-    ${CMAKE_SOURCE_DIR}/tests/support/TimeUtility.h)
+    ${CMAKE_SOURCE_DIR}/tests/support/Common.hpp
+    ${CMAKE_SOURCE_DIR}/tests/support/TestUtility.hpp
+    ${CMAKE_SOURCE_DIR}/tests/support/TimeUtility.hpp)
 
 add_library(PixelSumLib
     src/PixelSum.cpp
@@ -87,7 +87,7 @@ endif()
 if(CPPCHECK)
     set(PIXEL_SUM_CPPCHECK_ARGS
         --enable=warning,style,performance,portability
-        --std=c++17
+        --std=c++20
         --language=c++
         --inline-suppr)
 
