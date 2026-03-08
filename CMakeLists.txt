@@ -8,7 +8,7 @@ project(
 include(GNUInstallDirs)
 include(CTest)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -20,15 +20,15 @@ if(PIXEL_SUM_ENABLE_SANITIZERS AND CMAKE_BUILD_TYPE STREQUAL "Debug")
 endif()
 
 set(PIXEL_SUM_PUBLIC_HEADERS
-    ${CMAKE_SOURCE_DIR}/include/pixel_sum/PixelSum.h)
+    ${CMAKE_SOURCE_DIR}/include/pixel_sum/pixel_sum.hpp)
 
 set(PIXEL_SUM_TEST_SUPPORT_HEADERS
-    ${CMAKE_SOURCE_DIR}/tests/support/Common.h
-    ${CMAKE_SOURCE_DIR}/tests/support/TestUtility.h
-    ${CMAKE_SOURCE_DIR}/tests/support/TimeUtility.h)
+    ${CMAKE_SOURCE_DIR}/tests/support/common.hpp
+    ${CMAKE_SOURCE_DIR}/tests/support/test_utility.hpp
+    ${CMAKE_SOURCE_DIR}/tests/support/time_utility.hpp)
 
 add_library(PixelSumLib
-    src/PixelSum.cpp
+    src/pixel_sum.cpp
     ${PIXEL_SUM_PUBLIC_HEADERS})
 
 target_include_directories(PixelSumLib
@@ -41,7 +41,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 endif()
 
 add_executable(PixelSumTest
-    tests/PixelSumTest.cpp
+    tests/pixel_sum_test.cpp
     ${PIXEL_SUM_TEST_SUPPORT_HEADERS})
 
 target_link_libraries(PixelSumTest PRIVATE PixelSumLib)
@@ -58,8 +58,8 @@ find_program(CPPCHECK cppcheck)
 
 set(PIXEL_SUM_ALL_CPP
     ${PIXEL_SUM_PUBLIC_HEADERS}
-    ${CMAKE_SOURCE_DIR}/src/PixelSum.cpp
-    ${CMAKE_SOURCE_DIR}/tests/PixelSumTest.cpp
+    ${CMAKE_SOURCE_DIR}/src/pixel_sum.cpp
+    ${CMAKE_SOURCE_DIR}/tests/pixel_sum_test.cpp
     ${PIXEL_SUM_TEST_SUPPORT_HEADERS})
 
 if(CLANG_FORMAT)
@@ -78,7 +78,7 @@ endif()
 
 if(CLANG_TIDY)
     add_custom_target(tidy
-        COMMAND ${CLANG_TIDY} -p ${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR}/src/PixelSum.cpp ${CMAKE_SOURCE_DIR}/tests/PixelSumTest.cpp
+        COMMAND ${CLANG_TIDY} -p ${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR}/src/pixel_sum.cpp ${CMAKE_SOURCE_DIR}/tests/pixel_sum_test.cpp
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         COMMENT "Running clang-tidy"
         VERBATIM)
@@ -87,7 +87,7 @@ endif()
 if(CPPCHECK)
     set(PIXEL_SUM_CPPCHECK_ARGS
         --enable=warning,style,performance,portability
-        --std=c++17
+        --std=c++20
         --language=c++
         --inline-suppr)
 

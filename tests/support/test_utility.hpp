@@ -1,6 +1,6 @@
 #pragma once
 
-#include "support/Common.h"
+#include "support/common.hpp"
 #include <iostream>
 #include <cmath>
 
